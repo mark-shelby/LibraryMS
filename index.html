@@ -39,5 +39,134 @@
             </div>
         </form>
     </dialog>
+    <script>
+        const myLibrary = [];
+
+        function Book(title, author, pages, read) {
+            this.title = title;
+            this.author = author;
+            this.pages = pages;
+            this.read = read;
+            // Generate unique stable identifier
+            this.id = crypto.randomUUID(); 
+        }
+
+        // Prototype function to toggle read status
+        Book.prototype.toggleReadStatus = function() {
+            this.read = !this.read;
+        };
+
+        function addBookToLibrary(title, author, pages, read) {
+            const newBook = new Book(title, author, pages, read);
+            myLibrary.push(newBook);
+            displayBooks(); 
+        }
+
+        // --- 2. Display Logic ---
+        const libraryContainer = document.getElementById('library-container');
+
+        function displayBooks() {
+            // Clear the current display so we don't duplicate cards
+            libraryContainer.innerHTML = '';
+
+            myLibrary.forEach((book) => {
+                // Create card container
+                const card = document.createElement('div');
+                card.classList.add('book-card');
+                
+                // Add the unique id to the DOM element for easy targeting
+                card.dataset.id = book.id;
+
+                // Create text content
+                const titleEl = document.createElement('h3');
+                titleEl.textContent = book.title;
+
+                const authorEl = document.createElement('p');
+                authorEl.textContent = `Author: ${book.author}`;
+
+                const pagesEl = document.createElement('p');
+                pagesEl.textContent = `${book.pages} Pages`;
+
+                // Create Toggle Read Button
+                const readBtn = document.createElement('button');
+                readBtn.classList.add('btn-toggle');
+                if (book.read) {
+                    readBtn.textContent = 'Read';
+                    readBtn.classList.add('read-true');
+                } else {
+                    readBtn.textContent = 'Not Read';
+                }
+                
+                readBtn.addEventListener('click', () => {
+                    book.toggleReadStatus();
+                    displayBooks(); // Re-render to show updated status
+                });
+
+                // Create Remove Button
+                const removeBtn = document.createElement('button');
+                removeBtn.classList.add('btn-danger');
+                removeBtn.textContent = 'Remove';
+                
+                removeBtn.addEventListener('click', () => {
+                    removeBook(book.id);
+                });
+
+                // Append everything to card, then card to container
+                card.appendChild(titleEl);
+                card.appendChild(authorEl);
+                card.appendChild(pagesEl);
+                card.appendChild(readBtn);
+                card.appendChild(removeBtn);
+                
+                libraryContainer.appendChild(card);
+            });
+        }
+
+        function removeBook(idToRemove) {
+            // Find the index of the book with the matching ID
+            const index = myLibrary.findIndex(book => book.id === idToRemove);
+            if (index !== -1) {
+                myLibrary.splice(index, 1);
+                displayBooks(); 
+            }
+        }
+
+        const dialog = document.getElementById('book-dialog');
+        const newBookBtn = document.getElementById('new-book-btn');
+        const cancelBtn = document.getElementById('cancel-btn');
+        const bookForm = document.getElementById('book-form');
+
+        // Open Modal
+        newBookBtn.addEventListener('click', () => {
+            dialog.showModal();
+        });
+
+        // Close Modal on Cancel
+        cancelBtn.addEventListener('click', () => {
+            dialog.close();
+            bookForm.reset(); 
+        });
+
+        // Handle Form Submission
+        bookForm.addEventListener('submit', (event) => {
+            // Prevent default form submission behavior (sending data to a server)
+            event.preventDefault(); 
+
+            // Grab values from the inputs
+            const title = document.getElementById('title').value;
+            const author = document.getElementById('author').value;
+            const pages = document.getElementById('pages').value;
+            const read = document.getElementById('read').checked;
+
+            // Add the book and reset the UI
+            addBookToLibrary(title, author, pages, read);
+            dialog.close();
+            bookForm.reset(); 
+        });
+
+        // Add a couple of sample books to test the display immediately
+        addBookToLibrary("The Hobbit", "J.R.R. Tolkien", 295, true);
+        addBookToLibrary("1984", "George Orwell", 328, false);
+    </script>
 </body>
 </html>
